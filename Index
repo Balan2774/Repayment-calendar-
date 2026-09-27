@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#111827" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Digs Tracker" />
+  <link rel="manifest" href="manifest.json" />
+  <title>Digs & Repayment Tracker</title>
+  <style>
+    :root{
+      --bg:#0f172a;
+      --card:#111827;
+      --text:#f9fafb;
+      --muted:#9ca3af;
+      --accent:#22c55e;
+      --accent2:#3b82f6;
+      --border:#374151;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:linear-gradient(180deg,#0f172a,#111827);
+      color:var(--text);
+      min-height:100vh;
+      padding:18px;
+    }
+    .app{max-width:760px;margin:0 auto}
+    h1{margin:4px 0 6px;font-size:clamp(1.65rem,5vw,2.4rem)}
+    .subtitle{color:var(--muted);margin-bottom:18px}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+    .stat,.panel{
+      background:rgba(17,24,39,.94);
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:16px;
+      box-shadow:0 10px 24px rgba(0,0,0,.18);
+    }
+    .stat small{color:var(--muted);display:block;margin-bottom:6px}
+    .stat strong{font-size:1.35rem}
+    .progress-wrap{margin:18px 0 8px;background:#374151;height:15px;border-radius:999px;overflow:hidden}
+    .progress{height:100%;width:0;background:linear-gradient(90deg,var(--accent2),var(--accent));transition:width .3s ease}
+    .progress-text{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:.95rem}
+    .panel{margin-top:14px}
+    .panel h2{margin:0 0 14px;font-size:1.15rem}
+    label{display:block;color:var(--muted);margin-bottom:6px;font-size:.92rem}
+    input{
+      width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);
+      background:#0b1220;color:var(--text);font-size:1rem;outline:none
+    }
+    input:focus{border-color:var(--accent2)}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    button{border:0;border-radius:12px;padding:12px 14px;font-weight:700;cursor:pointer;font-size:.98rem}
+    .btn-primary{background:var(--accent);color:#052e16;width:100%;margin-top:10px}
+    .btn-secondary{background:#334155;color:white}
+    .btn-danger{background:transparent;color:#fca5a5;border:1px solid #7f1d1d}
+    .history{display:flex;flex-direction:column;gap:10px}
+    .payment{
+      display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px;
+      border-radius:12px;background:#0b1220;border:1px solid var(--border)
+    }
+    .payment .left strong{display:block}
+    .payment .left small{color:var(--muted)}
+    .paid{color:#86efac;font-weight:700}
+    .next{padding:14px;border-radius:14px;background:#052e16;border:1px solid #166534;margin-top:14px}
+    .empty{color:var(--muted);text-align:center;padding:18px 6px}
+    .actions{display:flex;gap:10px;margin-top:12px}
+    .actions button{flex:1}
+    .install{
+      display:none;
+      margin:0 0 14px;
+      width:100%;
+      background:#2563eb;
+      color:#fff;
+    }
+    .install-note{
+      color:var(--muted);
+      font-size:.9rem;
+      margin:8px 0 0;
+    }
+    @media(max-width:620px){
+      .grid,.form-grid{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <h1>💷 Digs & Repayment Tracker</h1>
+  <div class="subtitle">Track the £320 repayment alongside £150 monthly digs.</div>
+
+  <button id="installBtn" class="install">Install app</button>
+
+  <div class="grid">
+    <div class="stat"><small>Original debt</small><strong id="originalDebt">£320.00</strong></div>
+    <div class="stat"><small>Remaining debt</small><strong id="remainingDebt">£320.00</strong></div>
+    <div class="stat"><small>Total paid off</small><strong id="paidOff">£0.00</strong></div>
+  </div>
+
+  <div class="panel">
+    <h2>Repayment progress</h2>
+    <div class="progress-wrap"><div id="progress" class="progress"></div></div>
+    <div class="progress-text">
+      <span id="progressPercent">0% paid</span>
+      <span id="monthsEstimate">7 payments remaining</span>
+    </div>
+    <div class="next" id="nextPaymentBox"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Add monthly payment</h2>
+    <div class="form-grid">
+      <div>
+        <label for="month">Month / date</label>
+        <input id="month" type="month" />
+      </div>
+      <div>
+        <label for="repayment">Debt repayment (£)</label>
+        <input id="repayment" type="number" min="0" step="0.01" value="50" />
+      </div>
+    </div>
+
+    <div class="form-grid" style="margin-top:10px">
+      <div>
+        <label for="digs">Digs (£)</label>
+        <input id="digs" type="number" min="0" step="0.01" value="150" />
+      </div>
+      <div>
+        <label>Total for this month</label>
+        <input id="monthTotal" type="text" value="£200.00" readonly />
+      </div>
+    </div>
+
+    <button class="btn-primary" id="addPayment">Mark month as paid</button>
+    <div class="install-note">Your payment history is stored on this device.</div>
+  </div>
+
+  <div class="panel">
+    <h2>Payment history</h2>
+    <div id="history" class="history"></div>
+    <div class="actions">
+      <button class="btn-secondary" id="exportBtn">Export data</button>
+      <button class="btn-danger" id="resetBtn">Reset tracker</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DEFAULT_DEBT = 320;
+const DEFAULT_DIGS = 150;
+const DEFAULT_REPAYMENT = 50;
+const STORAGE_KEY = "digsRepaymentTrackerV1";
+
+let data = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null") || {
+  originalDebt: DEFAULT_DEBT,
+  payments: []
+};
+
+const money = n => new Intl.NumberFormat("en-GB", {
+  style:"currency", currency:"GBP"
+}).format(Number(n || 0));
+
+function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+function totalRepaid(){ return data.payments.reduce((sum,p) => sum + Number(p.repayment), 0); }
+function remaining(){ return Math.max(0, data.originalDebt - totalRepaid()); }
+
+function esc(s){
+  return String(s).replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
+  }[c]));
+}
+
+function formatMonth(v){
+  if(!v) return "Unknown date";
+  const [y,m] = v.split("-");
+  return new Date(Number(y), Number(m)-1, 1).toLocaleDateString("en-GB", {
+    month:"long", year:"numeric"
+  });
+}
+
+function updateTotalPreview(){
+  const d = Number(document.getElementById("digs").value || 0);
+  const r = Number(document.getElementById("repayment").value || 0);
+  document.getElementById("monthTotal").value = money(d+r);
+}
+
+function render(){
+  const repaid = totalRepaid();
+  const rem = remaining();
+  const pct = Math.min(100, (repaid / data.originalDebt) * 100 || 0);
+
+  originalDebt.textContent = money(data.originalDebt);
+  remainingDebt.textContent = money(rem);
+  paidOff.textContent = money(repaid);
+  progress.style.width = pct + "%";
+  progressPercent.textContent = pct.toFixed(0) + "% paid";
+
+  const est = rem <= 0 ? 0 : Math.ceil(rem / DEFAULT_REPAYMENT);
+  monthsEstimate.textContent =
+    rem <= 0 ? "Repayment complete 🎉" : `${est} payment${est === 1 ? "" : "s"} remaining`;
+
+  const nextRepayment = Math.min(DEFAULT_REPAYMENT, rem);
+  nextPaymentBox.innerHTML =
+    rem <= 0
+    ? `<strong>✅ Debt fully repaid</strong><br><span>You are back to ${money(DEFAULT_DIGS)} digs per month.</span>`
+    : `<strong>Next expected payment: ${money(DEFAULT_DIGS + nextRepayment)}</strong><br>
+       <span>${money(DEFAULT_DIGS)} digs + ${money(nextRepayment)} repayment</span>`;
+
+  if(data.payments.length === 0){
+    history.innerHTML = `<div class="empty">No payments recorded yet.</div>`;
+  } else {
+    history.innerHTML = [...data.payments].reverse().map((p, reversedIndex) => {
+      const originalIndex = data.payments.length - 1 - reversedIndex;
+      return `
+        <div class="payment">
+          <div class="left">
+            <strong>${esc(formatMonth(p.month))}</strong>
+            <small>Digs ${money(p.digs)} + repayment ${money(p.repayment)}</small>
+          </div>
+          <div style="text-align:right">
+            <div class="paid">${money(Number(p.digs)+Number(p.repayment))}</div>
+            <button class="btn-danger" style="padding:6px 9px;margin-top:6px"
+              onclick="removePayment(${originalIndex})">Delete</button>
+          </div>
+        </div>`;
+    }).join("");
+  }
+
+  save();
+}
+
+function removePayment(i){
+  data.payments.splice(i,1);
+  render();
+}
+window.removePayment = removePayment;
+
+digs.addEventListener("input", updateTotalPreview);
+repayment.addEventListener("input", updateTotalPreview);
+
+addPayment.addEventListener("click", () => {
+  const monthValue = month.value;
+  let digsValue = Number(digs.value);
+  let repaymentValue = Number(repayment.value);
+
+  if(!monthValue){
+    alert("Choose the month first.");
+    return;
+  }
+  if(digsValue < 0 || repaymentValue < 0){
+    alert("Amounts cannot be negative.");
+    return;
+  }
+
+  const rem = remaining();
+  if(rem <= 0){
+    alert("The debt is already fully repaid.");
+    return;
+  }
+
+  repaymentValue = Math.min(repaymentValue, rem);
+
+  const existing = data.payments.findIndex(p => p.month === monthValue);
+  if(existing !== -1){
+    if(!confirm("A payment already exists for this month. Replace it?")) return;
+    data.payments.splice(existing,1);
+  }
+
+  data.payments.push({month:monthValue, digs:digsValue, repayment:repaymentValue});
+  data.payments.sort((a,b) => a.month.localeCompare(b.month));
+
+  const newRem = remaining();
+  repayment.value = newRem > 0 ? Math.min(DEFAULT_REPAYMENT, newRem).toFixed(2) : "0.00";
+  updateTotalPreview();
+  render();
+});
+
+resetBtn.addEventListener("click", () => {
+  if(confirm("Reset all payments and start again?")){
+    data = {originalDebt: DEFAULT_DEBT, payments: []};
+    save();
+    render();
+  }
+});
+
+exportBtn.addEventListener("click", () => {
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "digs-repayment-tracker-backup.json";
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+let deferredPrompt = null;
+const installBtn = document.getElementById("installBtn");
+
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  installBtn.style.display = "block";
+});
+
+installBtn.addEventListener("click", async () => {
+  if(!deferredPrompt) return;
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  installBtn.style.display = "none";
+});
+
+window.addEventListener("appinstalled", () => {
+  installBtn.style.display = "none";
+});
+
+if("serviceWorker" in navigator){
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js");
+  });
+}
+
+(function init(){
+  const now = new Date();
+  month.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
+  const rem = remaining();
+  repayment.value = rem > 0 ? Math.min(DEFAULT_REPAYMENT, rem) : 0;
+  updateTotalPreview();
+  render();
+})();
+</script>
+</body>
+</html>
