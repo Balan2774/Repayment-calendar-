@@ -1,0 +1,11 @@
+{
+  "name": "Digs & Repayment Tracker",
+  "short_name": "Digs Tracker",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#111827",
+  "description": "Track monthly digs and repayment progress.",
+  "icons": []
+}
